@@ -1,0 +1,26 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t binhtc/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true binhtc/react-test npm run test
+
+after_success:
+  - docker build -t binhtc/multi-client ./client
+  - docker build -t binhtc/multi-nginx ./nginx
+  - docker build -t binhtc/multi-server ./server
+  - docker build -t binhtc/multi-worker ./worker
+
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push binhtc/multi-client
+  - docker push binhtc/multi-nginx
+  - docker push binhtc/multi-server
+  - docker push binhtc/multi-worker
+
+
+
